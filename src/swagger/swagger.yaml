@@ -1,0 +1,167 @@
+openapi: 3.0.0
+info:
+  title: Transaction Reconciliation Engine API
+  version: 1.0.0
+  description: API for reconciling crypto transactions between user and exchange data
+
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+
+paths:
+  /reconcile:
+    post:
+      summary: Trigger reconciliation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                timestampToleranceSeconds:
+                  type: integer
+                  default: 300
+                  description: Tolerance in seconds for timestamp matching
+                quantityTolerancePct:
+                  type: number
+                  default: 0.01
+                  description: Tolerance percentage for quantity matching
+      responses:
+        '202':
+          description: Reconciliation started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      runId:
+                        type: string
+                      status:
+                        type: string
+
+  /report/{runId}/summary:
+    get:
+      summary: Get reconciliation summary
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Summary retrieved successfully
+
+  /report/{runId}/detailed:
+    get:
+      summary: Get detailed report with filters
+      parameters:
+        - name: runId
+          in: path
+          required: true
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [MATCHED, CONFLICTING, UNMATCHED_USER, UNMATCHED_EXCHANGE]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Report retrieved successfully
+
+  /report/{runId}/statistics:
+    get:
+      summary: Get comprehensive statistics
+      parameters:
+        - name: runId
+          in: path
+          required: true
+      responses:
+        '200':
+          description: Statistics retrieved successfully
+
+  /report/{runId}/audit/{transactionId}:
+    get:
+      summary: Get audit trail for a transaction
+      parameters:
+        - name: runId
+          in: path
+          required: true
+        - name: transactionId
+          in: path
+          required: true
+      responses:
+        '200':
+          description: Audit trail retrieved successfully
+
+  /report/compare/{runId1}/{runId2}:
+    get:
+      summary: Compare two reconciliation runs
+      parameters:
+        - name: runId1
+          in: path
+          required: true
+        - name: runId2
+          in: path
+          required: true
+      responses:
+        '200':
+          description: Comparison retrieved successfully
+
+  /dashboard:
+    get:
+      summary: Get dashboard data
+      responses:
+        '200':
+          description: Dashboard data retrieved successfully
+
+components:
+  schemas:
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        type:
+          type: string
+        asset:
+          type: string
+        quantity:
+          type: number
+        priceUsd:
+          type: number
+        fee:
+          type: number
+        
+    ReconciliationResult:
+      type: object
+      properties:
+        category:
+          type: string
+          enum: [MATCHED, CONFLICTING, UNMATCHED_USER, UNMATCHED_EXCHANGE]
+        reason:
+          type: string
+        matchScore:
+          type: number
+        userTransaction:
+          $ref: '#/components/schemas/Transaction'
+        exchangeTransaction:
+          $ref: '#/components/schemas/Transaction'

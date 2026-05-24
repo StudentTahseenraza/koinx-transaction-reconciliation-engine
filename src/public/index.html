@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Reconciliation Engine - API Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .base-url {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            display: inline-block;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .category {
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .category-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .category-header h2 {
+            font-size: 1.3em;
+        }
+
+        .category-header .toggle-icon {
+            font-size: 1.5em;
+            transition: transform 0.3s;
+        }
+
+        .category-body {
+            padding: 20px;
+            display: none;
+        }
+
+        .category-body.active {
+            display: block;
+        }
+
+        .endpoint {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            padding: 15px;
+            transition: all 0.3s;
+        }
+
+        .endpoint:hover {
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .method {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .method.GET { background: #61affe; color: white; }
+        .method.POST { background: #49cc90; color: white; }
+        .method.PUT { background: #fca130; color: white; }
+        .method.DELETE { background: #f93e3e; color: white; }
+
+        .path {
+            font-family: monospace;
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .params {
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+
+        .param {
+            margin: 5px 0;
+        }
+
+        .param-name {
+            font-weight: bold;
+            color: #e83e8c;
+        }
+
+        .input-group {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .input-group label {
+            display: inline-block;
+            width: 180px;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        input, select, textarea {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 13px;
+            margin: 5px;
+            width: 250px;
+        }
+
+        textarea {
+            width: 100%;
+            font-family: monospace;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5a67d8;
+        }
+
+        .response-area {
+            margin-top: 15px;
+        }
+
+        .response {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .response.active {
+            display: block;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .badge {
+            background: #48bb78;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-left: 10px;
+        }
+
+        hr {
+            margin: 20px 0;
+            border: none;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .success {
+            color: #48bb78;
+        }
+
+        .error {
+            color: #f56565;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Transaction Reconciliation Engine</h1>
+            <p>API Dashboard - Test all endpoints easily</p>
+            <div class="base-url">
+                📍 Base URL: <span id="baseUrl">http://localhost:3000</span>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total Endpoints</h3>
+                <div class="number" id="totalEndpoints">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>GET Endpoints</h3>
+                <div class="number" id="getCount">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>POST Endpoints</h3>
+                <div class="number" id="postCount">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Server Status</h3>
+                <div class="number" id="serverStatus">🟢 Online</div>
+            </div>
+        </div>
+
+        <div id="endpointsContainer"></div>
+    </div>
+
+    <script>
+        const BASE_URL = window.location.origin;
+        
+        // Define all endpoints
+        const endpoints = {
+            "🏠 Health & Info": [
+                {
+                    method: "GET",
+                    path: "/health",
+                    description: "Check server health status",
+                    params: []
+                },
+                {
+                    method: "GET",
+                    path: "/",
+                    description: "Get API information and available endpoints",
+                    params: []
+                }
+            ],
+            "📊 Dashboard": [
+                {
+                    method: "GET",
+                    path: "/api/dashboard",
+                    description: "Get dashboard with latest run statistics and insights",
+                    params: []
+                }
+            ],
+            "🔄 Reconciliation": [
+                {
+                    method: "POST",
+                    path: "/api/reconcile",
+                    description: "Trigger a new reconciliation run",
+                    params: [
+                        { name: "timestampToleranceSeconds", type: "number", placeholder: "300", description: "Timestamp tolerance in seconds", required: false },
+                        { name: "quantityTolerancePct", type: "number", placeholder: "0.01", description: "Quantity tolerance percentage", required: false }
+                    ],
+                    hasBody: true
+                },
+                {
+                    method: "GET",
+                    path: "/api/reconcile/runs",
+                    description: "Get all reconciliation runs",
+                    params: [
+                        { name: "limit", type: "number", placeholder: "50", description: "Number of runs to return", required: false },
+                        { name: "offset", type: "number", placeholder: "0", description: "Number of runs to skip", required: false }
+                    ]
+                }
+            ],
+            "📈 Reports": [
+                {
+                    method: "GET",
+                    path: "/api/report/:runId/summary",
+                    description: "Get reconciliation summary",
+                    params: [
+                        { name: "runId", type: "text", placeholder: "test_run_001", description: "Reconciliation run ID", required: true }
+                    ]
+                },
+                {
+                    method: "GET",
+                    path: "/api/report/:runId",
+                    description: "Get full reconciliation report",
+                    params: [
+                        { name: "runId", type: "text", placeholder: "test_run_001", description: "Reconciliation run ID", required: true },
+                        { name: "category", type: "select", options: ["", "MATCHED", "CONFLICTING", "UNMATCHED_USER", "UNMATCHED_EXCHANGE"], description: "Filter by category", required: false }
+                    ]
+                },
+                {
+                    method: "GET",
+                    path: "/api/report/:runId/detailed",
+                    description: "Get detailed report with filters",
+                    params: [
+                        { name: "runId", type: "text", placeholder: "test_run_001", description: "Reconciliation run ID", required: true },
+                        { name: "category", type: "select", options: ["", "MATCHED", "CONFLICTING", "UNMATCHED_USER", "UNMATCHED_EXCHANGE"], description: "Filter by category", required: false },
+                        { name: "asset", type: "text", placeholder: "BTC", description: "Filter by asset", required: false },
+                        { name: "minMatchScore", type: "number", placeholder: "70", description: "Minimum match score", required: false },
+                        { name: "maxMatchScore", type: "number", placeholder: "100", description: "Maximum match score", required: false },
+                        { name: "page", type: "number", placeholder: "1", description: "Page number", required: false },
+                        { name: "limit", type: "number", placeholder: "50", description: "Items per page", required: false }
+                    ]
+                },
+                {
+                    method: "GET",
+                    path: "/api/report/:runId/statistics",
+                    description: "Get comprehensive statistics",
+                    params: [
+                        { name: "runId", type: "text", placeholder: "test_run_001", description: "Reconciliation run ID", required: true }
+                    ]
+                },
+                {
+                    method: "GET",
+                    path: "/api/report/:runId/unmatched",
+                    description: "Get unmatched transactions only",
+                    params: [
+                        { name: "runId", type: "text", placeholder: "test_run_001", description: "Reconciliation run ID", required: true }
+                    ]
+                },
+                {
+                    method: "GET",
+                    path: "/api/report/:runId/export/:format",
+                    description: "Export report (JSON or CSV)",
+                    params: [
+                        { name: "runId", type: "text", placeholder: "test_run_001", description: "Reconciliation run ID", required: true },
+                        { name: "format", type: "select", options: ["json", "csv"], description: "Export format", required: true }
+                    ]
+                },
+                {
+                    method: "GET",
+                    path: "/api/report/:runId/audit/:transactionId",
+                    description: "Get audit trail for a specific transaction",
+                    params: [
+                        { name: "runId", type: "text", placeholder: "test_run_001", description: "Reconciliation run ID", required: true },
+                        { name: "transactionId", type: "text", placeholder: "USR-001", description: "Transaction ID", required: true }
+                    ]
+                },
+                {
+                    method: "GET",
+                    path: "/api/report/compare/:runId1/:runId2",
+                    description: "Compare two reconciliation runs",
+                    params: [
+                        { name: "runId1", type: "text", placeholder: "test_run_001", description: "First run ID", required: true },
+                        { name: "runId2", type: "text", placeholder: "run_1734567890123_abc123", description: "Second run ID", required: true }
+                    ]
+                }
+            ],
+            "📁 Ingestion": [
+                {
+                    method: "POST",
+                    path: "/api/ingestion/upload",
+                    description: "Upload CSV files for ingestion",
+                    params: [
+                        { name: "userCsv", type: "file", description: "User transactions CSV file", required: true },
+                        { name: "exchangeCsv", type: "file", description: "Exchange transactions CSV file", required: true }
+                    ],
+                    isFileUpload: true
+                },
+                {
+                    method: "GET",
+                    path: "/api/ingestion/status/:runId",
+                    description: "Get ingestion status",
+                    params: [
+                        { name: "runId", type: "text", placeholder: "test_run_001", description: "Reconciliation run ID", required: true }
+                    ]
+                }
+            ]
+        };
+
+        let totalEndpoints = 0;
+        let getCount = 0;
+        let postCount = 0;
+
+        // Build the UI
+        function buildUI() {
+            const container = document.getElementById('endpointsContainer');
+            container.innerHTML = '';
+            
+            for (const [category, eps] of Object.entries(endpoints)) {
+                totalEndpoints += eps.length;
+                getCount += eps.filter(e => e.method === 'GET').length;
+                postCount += eps.filter(e => e.method === 'POST').length;
+                
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category';
+                
+                let endpointsHTML = '';
+                for (const ep of eps) {
+                    endpointsHTML += createEndpointHTML(ep);
+                }
+                
+                categoryDiv.innerHTML = `
+                    <div class="category-header" onclick="toggleCategory(this)">
+                        <h2>${category}</h2>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="category-body">
+                        ${endpointsHTML}
+                    </div>
+                `;
+                container.appendChild(categoryDiv);
+            }
+            
+            document.getElementById('totalEndpoints').innerText = totalEndpoints;
+            document.getElementById('getCount').innerText = getCount;
+            document.getElementById('postCount').innerText = postCount;
+        }
+
+        function createEndpointHTML(ep) {
+            const uniqueId = `${ep.method}_${ep.path.replace(/[\/:]/g, '_')}`;
+            
+            let paramsHTML = '';
+            if (ep.params && ep.params.length > 0) {
+                paramsHTML = `
+                    <div class="params">
+                        <strong>📝 Parameters:</strong><br>
+                        ${ep.params.map(p => `
+                            <div class="param">
+                                <span class="param-name">${p.name}</span> (${p.type})${p.required ? ' <span style="color:red">*</span>' : ''}
+                                ${p.description ? `<br><span style="color:#666;font-size:11px">${p.description}</span>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            let inputsHTML = '';
+            if (ep.params && ep.params.length > 0) {
+                inputsHTML = `
+                    <div class="input-group">
+                        ${ep.params.map(p => {
+                            if (p.type === 'file') {
+                                return `<div style="margin: 10px 0">
+                                            <label>${p.name}:</label>
+                                            <input type="file" id="${uniqueId}_${p.name}" name="${p.name}" ${p.required ? 'required' : ''}>
+                                        </div>`;
+                            } else if (p.type === 'select') {
+                                return `<div style="margin: 10px 0">
+                                            <label>${p.name}:</label>
+                                            <select id="${uniqueId}_${p.name}">
+                                                ${p.options.map(opt => `<option value="${opt}">${opt || 'None'}</option>`).join('')}
+                                            </select>
+                                        </div>`;
+                            } else {
+                                return `<div style="margin: 10px 0">
+                                            <label>${p.name}:</label>
+                                            <input type="${p.type}" id="${uniqueId}_${p.name}" placeholder="${p.placeholder || ''}">
+                                        </div>`;
+                            }
+                        }).join('')}
+                    </div>
+                `;
+            }
+            
+            let bodyHTML = '';
+            if (ep.hasBody) {
+                bodyHTML = `
+                    <div class="input-group">
+                        <label>Request Body (JSON):</label><br>
+                        <textarea id="${uniqueId}_body" rows="5" style="width:100%; font-family:monospace;">{
+  "timestampToleranceSeconds": 300,
+  "quantityTolerancePct": 0.01
+}</textarea>
+                    </div>
+                `;
+            }
+            
+            return `
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method ${ep.method}">${ep.method}</span>
+                        <span class="path">${ep.path}</span>
+                    </div>
+                    <div class="description">${ep.description}</div>
+                    ${paramsHTML}
+                    ${inputsHTML}
+                    ${bodyHTML}
+                    <button onclick="testEndpoint('${ep.method}', '${ep.path}', '${uniqueId}', ${ep.isFileUpload || false}, ${!!ep.hasBody})">🚀 Test Endpoint</button>
+                    <div class="response-area">
+                        <div class="response" id="response_${uniqueId}"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.testEndpoint = async function(method, path, uniqueId, isFileUpload, hasBody) {
+            let fullPath = path;
+            const responseDiv = document.getElementById(`response_${uniqueId}`);
+            
+            // Collect all input values
+            const params = {};
+            const fileInputs = new Map();
+            const inputElements = document.querySelectorAll(`#${uniqueId} input, #${uniqueId} select`);
+            
+            for (const input of inputElements) {
+                const inputId = input.id.replace(`${uniqueId}_`, '');
+                if (input.type === 'file') {
+                    fileInputs.set(inputId, input);
+                } else if (input.value) {
+                    params[inputId] = input.value;
+                }
+            }
+            
+            // Replace path parameters
+            for (const [key, value] of Object.entries(params)) {
+                if (fullPath.includes(`:${key}`)) {
+                    fullPath = fullPath.replace(`:${key}`, value);
+                    delete params[key];
+                }
+            }
+            
+            // Build query string
+            const queryParams = new URLSearchParams();
+            for (const [key, value] of Object.entries(params)) {
+                if (value && value !== '') {
+                    queryParams.append(key, value);
+                }
+            }
+            const queryString = queryParams.toString();
+            if (queryString) {
+                fullPath += '?' + queryString;
+            }
+            
+            // Get body data if needed
+            let bodyData = null;
+            if (hasBody) {
+                const bodyTextarea = document.getElementById(`${uniqueId}_body`);
+                if (bodyTextarea && bodyTextarea.value) {
+                    try {
+                        bodyData = JSON.parse(bodyTextarea.value);
+                    } catch (e) {
+                        bodyData = { error: 'Invalid JSON format' };
+                    }
+                }
+            }
+            
+            // Show loading
+            responseDiv.innerHTML = '<div class="loading"></div> Testing endpoint...';
+            responseDiv.classList.add('active');
+            
+            try {
+                let response;
+                
+                if (isFileUpload && fileInputs.size > 0) {
+                    const formData = new FormData();
+                    for (const [key, fileInput] of fileInputs) {
+                        if (fileInput.files && fileInput.files[0]) {
+                            formData.append(key, fileInput.files[0]);
+                        }
+                    }
+                    response = await fetch(`${BASE_URL}${fullPath}`, {
+                        method: method,
+                        body: formData
+                    });
+                } else {
+                    response = await fetch(`${BASE_URL}${fullPath}`, {
+                        method: method,
+                        headers: hasBody ? { 'Content-Type': 'application/json' } : {},
+                        body: hasBody ? JSON.stringify(bodyData) : undefined
+                    });
+                }
+                
+                const data = await response.json();
+                
+                responseDiv.innerHTML = `
+                    <div style="margin-bottom: 10px; padding: 8px; background: ${response.ok ? '#2e7d32' : '#c62828'}; border-radius: 5px;">
+                        <strong>Status: ${response.status} ${response.statusText}</strong>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <strong>Response Data:</strong>
+                        <pre style="margin-top: 10px; background: #2d2d2d; padding: 10px; border-radius: 5px; overflow-x: auto;">${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                responseDiv.innerHTML = `
+                    <div style="margin-bottom: 10px; padding: 8px; background: #c62828; border-radius: 5px;">
+                        <strong>Error: ${error.message}</strong>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <strong>Make sure the server is running at ${BASE_URL}</strong>
+                    </div>
+                `;
+            }
+        };
+
+        window.toggleCategory = function(header) {
+            const body = header.nextElementSibling;
+            const icon = header.querySelector('.toggle-icon');
+            body.classList.toggle('active');
+            icon.style.transform = body.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0)';
+        };
+
+        // Initialize
+        buildUI();
+        
+        // Auto-expand first category
+        const firstCategory = document.querySelector('.category-body');
+        if (firstCategory) {
+            firstCategory.classList.add('active');
+        }
+    </script>
+</body>
+</html>

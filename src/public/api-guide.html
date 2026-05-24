@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reconciliation Engine - API Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .base-url {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: monospace;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 30px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+
+        .nav-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .nav-section h3 {
+            color: #667eea;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .nav-links {
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-bottom: 8px;
+        }
+
+        .nav-links a {
+            color: #555;
+            text-decoration: none;
+            font-size: 14px;
+            display: block;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: #f5f5f5;
+            color: #667eea;
+        }
+
+        /* Main Content */
+        .main-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title .icon {
+            font-size: 1.5em;
+        }
+
+        .endpoint-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+            border-left: 4px solid #667eea;
+        }
+
+        .endpoint-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateX(5px);
+        }
+
+        .endpoint-method {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-right: 12px;
+        }
+
+        .method-GET { background: #61affe; color: white; }
+        .method-POST { background: #49cc90; color: white; }
+        .method-PUT { background: #fca130; color: white; }
+        .method-DELETE { background: #f93e3e; color: white; }
+
+        .endpoint-path {
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .endpoint-desc {
+            color: #666;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+
+        .params-table {
+            margin-top: 15px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+
+        .params-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .params-table th {
+            background: #f5f5f5;
+            padding: 10px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .params-table td {
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .params-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .param-required {
+            color: #f56565;
+            font-size: 11px;
+            margin-left: 5px;
+        }
+
+        .example {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+        }
+
+        .example pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-left: 10px;
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .try-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+
+        .try-btn:hover {
+            background: #5a67d8;
+        }
+
+        .response-demo {
+            margin-top: 15px;
+            display: none;
+        }
+
+        .response-demo.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>🚀 Transaction Reconciliation Engine</h1>
+            <p>API Reference Guide - Match user and exchange transactions with configurable tolerances</p>
+            <div class="base-url">
+                📍 Base URL: <span id="baseUrl">http://localhost:3000</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="nav-section">
+                <h3>📚 API Categories</h3>
+                <ul class="nav-links">
+                    <li><a href="#health">🏠 Health & Info</a></li>
+                    <li><a href="#dashboard">📊 Dashboard</a></li>
+                    <li><a href="#reconciliation">🔄 Reconciliation</a></li>
+                    <li><a href="#reports">📈 Reports</a></li>
+                    <li><a href="#ingestion">📁 Ingestion</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>⚙️ Configuration</h3>
+                <ul class="nav-links">
+                    <li><a href="#config-tolerances">Timestamp Tolerance</a></li>
+                    <li><a href="#config-tolerances">Quantity Tolerance</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>📖 Resources</h3>
+                <ul class="nav-links">
+                    <li><a href="#" onclick="testHealth()">Test Connection</a></li>
+                    <li><a href="#" onclick="viewDashboard()">View Dashboard</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Health Section -->
+            <div id="health" class="section">
+                <div class="section-title">
+                    <span class="icon">🏠</span>
+                    <span>Health & Info</span>
+                </div>
+
+                <div class="endpoint-card">
+                    <div>
+                        <span class="endpoint-method method-GET">GET</span>
+                        <span class="endpoint-path">/health</span>
+                    </div>
+                    <div class="endpoint-desc">Check server health status and uptime</div>
+                    <div class="params-table">
+                        <table>
+                            <thead>
+                                <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="4">No parameters required</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="example">
+                        <strong>Example Response:</strong>
+                        <pre>{
+  "status": "healthy",
+  "timestamp": "2024-03-15T10:30:00Z",
+  "uptime": 1234.56
+}</pre>
+                    </div>
+                    <button class="try-btn" onclick="testEndpoint('/health')">Try it Now</button>
+                    <div id="response-health" class="response-demo"></div>
+                </div>
+
+                <div class="endpoint-card">
+                    <div>
+                        <span class="endpoint-method method-GET">GET</span>
+                        <span class="endpoint-path">/</span>
+                    </div>
+                    <div class="endpoint-desc">Get API information and available endpoints</div>
+                    <button class="try-btn" onclick="testEndpoint('/')">Try it Now</button>
+                    <div id="response-root" class="response-demo"></div>
+                </div>
+            </div>
+
+            <!-- Dashboard Section -->
+            <div id="dashboard" class="section">
+                <div class="section-title">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </div>
+
+                <div class="endpoint-card">
+                    <div>
+                        <span class="endpoint-method method-GET">GET</span>
+                        <span class="endpoint-path">/api/dashboard</span>
+                    </div>
+                    <div class="endpoint-desc">Get dashboard with latest run statistics and insights</div>
+                    <div class="params-table">
+                        <table>
+                            <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+                            <tbody><tr><td colspan="4">No parameters required</td></tr></tbody>
+                        </table>
+                    </div>
+                    <div class="example">
+                        <strong>Example Response:</strong>
+                        <pre>{
+  "status": "success",
+  "data": {
+    "latestRun": {
+      "runId": "test_run_001",
+      "status": "COMPLETED",
+      "statistics": {...}
+    },
+    "recentRuns": [...],
+    "topConflicts": [...]
+  }
+}</pre>
+                    </div>
+                    <button class="try-btn" onclick="testEndpoint('/api/dashboard')">Try it Now</button>
+                    <div id="response-dashboard" class="response-demo"></div>
+                </div>
+            </div>
+
+            <!-- Reconciliation Section -->
+            <div id="reconciliation" class="section">
+                <div class="section-title">
+                    <span class="icon">🔄</span>
+                    <span>Reconciliation</span>
+                </div>
+
+                <div class="endpoint-card">
+                    <div>
+                        <span class="endpoint-method method-POST">POST</span>
+                        <span class="endpoint-path">/api/reconcile</span>
+                    </div>
+                    <div class="endpoint-desc">Trigger a new reconciliation run</div>
+                    <div class="params-table">
+                        <table>
+                            <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+                            <tbody>
+                                <tr><td>timestampToleranceSeconds</td><td>number</td><td>No</td><td>Tolerance in seconds for timestamp matching (default: 300)</td></tr>
+                                <tr><td>quantityTolerancePct</td><td>number</td><td>No</td><td>Tolerance percentage for quantity matching (default: 0.01)</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="example">
+                        <strong>Example Request Body:</strong>
+                        <pre>{
+  "timestampToleranceSeconds": 300,
+  "quantityTolerancePct": 0.01
+}</pre>
+                    </div>
+                    <button class="try-btn" onclick="testReconcile()">Try it Now</button>
+                    <div id="response-reconcile" class="response-demo"></div>
+                </div>
+
+                <div class="endpoint-card">
+                    <div>
+                        <span class="endpoint-method method-GET">GET</span>
+                        <span class="endpoint-path">/api/reconcile/runs</span>
+                    </div>
+                    <div class="endpoint-desc">Get all reconciliation runs with pagination</div>
+                    <div class="params-table">
+                        <table>
+                            <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+                            <tbody>
+                                <tr><td>limit</td><td>number</td><td>No</td><td>Number of runs to return (default: 50)</td></tr>
+                                <tr><td>offset</td><td>number</td><td>No</td><td>Number of runs to skip (default: 0)</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button class="try-btn" onclick="testEndpoint('/api/reconcile/runs')">Try it Now</button>
+                    <div id="response-runs" class="response-demo"></div>
+                </div>
+            </div>
+
+            <!-- Reports Section -->
+            <div id="reports" class="section">
+                <div class="section-title">
+                    <span class="icon">📈</span>
+                    <span>Reports</span>
+                </div>
+
+                <div class="endpoint-card">
+                    <div>
+                        <span class="endpoint-method method-GET">GET</span>
+                        <span class="endpoint-path">/api/report/{runId}/summary</span>
+                    </div>
+                    <div class="endpoint-desc">Get reconciliation summary for a specific run</div>
+                    <div class="params-table">
+                        <table>
+                            <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+                            <tbody>
+                                <tr><td>runId</td><td>string</td><td>Yes</td><td>Reconciliation run ID (e.g., test_run_001)</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div>
+                        <input type="text" id="summaryRunId" placeholder="Enter Run ID (e.g., test_run_001)" style="padding: 8px; width: 300px; margin-top: 10px;">
+                        <button class="try-btn" onclick="testSummary()">Try it Now</button>
+                    </div>
+                    <div id="response-summary" class="response-demo"></div>
+                </div>
+
+                <div class="endpoint-card">
+                    <div>
+                        <span class="endpoint-method method-GET">GET</span>
+                        <span class="endpoint-path">/api/report/{runId}/statistics</span>
+                    </div>
+                    <div class="endpoint-desc">Get comprehensive statistics for a run</div>
+                    <div>
+                        <input type="text" id="statsRunId" placeholder="Enter Run ID" style="padding: 8px; width: 300px; margin-top: 10px;">
+                        <button class="try-btn" onclick="testStatistics()">Try it Now</button>
+                    </div>
+                    <div id="response-statistics" class="response-demo"></div>
+                </div>
+
+                <div class="endpoint-card">
+                    <div>
+                        <span class="endpoint-method method-GET">GET</span>
+                        <span class="endpoint-path">/api/report/{runId}/export/{format}</span>
+                    </div>
+                    <div class="endpoint-desc">Export report in JSON or CSV format</div>
+                    <div>
+                        <input type="text" id="exportRunId" placeholder="Run ID" style="padding: 8px; width: 200px; margin-top: 10px;">
+                        <select id="exportFormat" style="padding: 8px; margin-left: 10px;">
+                            <option value="json">JSON</option>
+                            <option value="csv">CSV</option>
+                        </select>
+                        <button class="try-btn" onclick="testExport()">Try it Now</button>
+                    </div>
+                    <div id="response-export" class="response-demo"></div>
+                </div>
+            </div>
+
+            <!-- Ingestion Section -->
+            <div id="ingestion" class="section">
+                <div class="section-title">
+                    <span class="icon">📁</span>
+                    <span>Ingestion</span>
+                </div>
+
+                <div class="endpoint-card">
+                    <div>
+                        <span class="endpoint-method method-POST">POST</span>
+                        <span class="endpoint-path">/api/ingestion/upload</span>
+                    </div>
+                    <div class="endpoint-desc">Upload CSV files for ingestion</div>
+                    <div>
+                        <input type="file" id="userCsv" accept=".csv" style="margin: 10px 0;">
+                        <input type="file" id="exchangeCsv" accept=".csv" style="margin: 10px 0;">
+                        <button class="try-btn" onclick="testUpload()">Upload & Ingest</button>
+                    </div>
+                    <div id="response-upload" class="response-demo"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = window.location.origin;
+
+        async function testEndpoint(endpoint) {
+            const responseDiv = document.getElementById(`response-${endpoint.replace(/\//g, '-')}`);
+            responseDiv.style.display = 'block';
+            responseDiv.innerHTML = '<div style="padding: 10px; text-align: center;">⏳ Loading...</div>';
+            
+            try {
+                const response = await fetch(`${BASE_URL}${endpoint}`);
+                const data = await response.json();
+                responseDiv.innerHTML = `
+                    <div style="margin-top: 15px; background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 8px;">
+                        <div style="margin-bottom: 10px; color: ${response.ok ? '#49cc90' : '#f93e3e'}">
+                            <strong>Status: ${response.status} ${response.statusText}</strong>
+                        </div>
+                        <pre style="margin: 0; overflow-x: auto;">${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                responseDiv.innerHTML = `
+                    <div style="margin-top: 15px; background: #f93e3e; color: white; padding: 15px; border-radius: 8px;">
+                        <strong>Error:</strong> ${error.message}<br>
+                        Make sure the server is running at ${BASE_URL}
+                    </div>
+                `;
+            }
+        }
+
+        async function testReconcile() {
+            const responseDiv = document.getElementById('response-reconcile');
+            responseDiv.style.display = 'block';
+            responseDiv.innerHTML = '<div style="padding: 10px; text-align: center;">⏳ Starting reconciliation...</div>';
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/reconcile`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        timestampToleranceSeconds: 300,
+                        quantityTolerancePct: 0.01
+                    })
+                });
+                const data = await response.json();
+                responseDiv.innerHTML = `
+                    <div style="margin-top: 15px; background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 8px;">
+                        <div style="margin-bottom: 10px; color: #49cc90">
+                            <strong>Status: ${response.status} ${response.statusText}</strong>
+                        </div>
+                        <pre style="margin: 0; overflow-x: auto;">${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                responseDiv.innerHTML = `<div style="margin-top: 15px; background: #f93e3e; color: white; padding: 15px; border-radius: 8px;"><strong>Error:</strong> ${error.message}</div>`;
+            }
+        }
+
+        async function testSummary() {
+            const runId = document.getElementById('summaryRunId').value;
+            if (!runId) {
+                alert('Please enter a Run ID');
+                return;
+            }
+            const responseDiv = document.getElementById('response-summary');
+            responseDiv.style.display = 'block';
+            responseDiv.innerHTML = '<div style="padding: 10px; text-align: center;">⏳ Loading...</div>';
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/report/${runId}/summary`);
+                const data = await response.json();
+                responseDiv.innerHTML = `
+                    <div style="margin-top: 15px; background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 8px;">
+                        <div style="margin-bottom: 10px; color: ${response.ok ? '#49cc90' : '#f93e3e'}">
+                            <strong>Status: ${response.status}</strong>
+                        </div>
+                        <pre style="margin: 0; overflow-x: auto;">${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                responseDiv.innerHTML = `<div style="margin-top: 15px; background: #f93e3e; color: white; padding: 15px; border-radius: 8px;"><strong>Error:</strong> ${error.message}</div>`;
+            }
+        }
+
+        async function testStatistics() {
+            const runId = document.getElementById('statsRunId').value;
+            if (!runId) {
+                alert('Please enter a Run ID');
+                return;
+            }
+            const responseDiv = document.getElementById('response-statistics');
+            responseDiv.style.display = 'block';
+            responseDiv.innerHTML = '<div style="padding: 10px; text-align: center;">⏳ Loading...</div>';
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/report/${runId}/statistics`);
+                const data = await response.json();
+                responseDiv.innerHTML = `
+                    <div style="margin-top: 15px; background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 8px;">
+                        <pre style="margin: 0; overflow-x: auto;">${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                responseDiv.innerHTML = `<div style="margin-top: 15px; background: #f93e3e; color: white; padding: 15px; border-radius: 8px;"><strong>Error:</strong> ${error.message}</div>`;
+            }
+        }
+
+        async function testExport() {
+            const runId = document.getElementById('exportRunId').value;
+            const format = document.getElementById('exportFormat').value;
+            if (!runId) {
+                alert('Please enter a Run ID');
+                return;
+            }
+            
+            window.open(`${BASE_URL}/api/report/${runId}/export/${format}`, '_blank');
+        }
+
+        async function testUpload() {
+            const userCsv = document.getElementById('userCsv').files[0];
+            const exchangeCsv = document.getElementById('exchangeCsv').files[0];
+            
+            if (!userCsv || !exchangeCsv) {
+                alert('Please select both CSV files');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('userCsv', userCsv);
+            formData.append('exchangeCsv', exchangeCsv);
+            
+            const responseDiv = document.getElementById('response-upload');
+            responseDiv.style.display = 'block';
+            responseDiv.innerHTML = '<div style="padding: 10px; text-align: center;">⏳ Uploading files...</div>';
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/ingestion/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                responseDiv.innerHTML = `
+                    <div style="margin-top: 15px; background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 8px;">
+                        <pre style="margin: 0; overflow-x: auto;">${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                responseDiv.innerHTML = `<div style="margin-top: 15px; background: #f93e3e; color: white; padding: 15px; border-radius: 8px;"><strong>Error:</strong> ${error.message}</div>`;
+            }
+        }
+
+        function testHealth() {
+            testEndpoint('/health');
+            document.getElementById('health').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function viewDashboard() {
+            testEndpoint('/api/dashboard');
+            document.getElementById('dashboard').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
