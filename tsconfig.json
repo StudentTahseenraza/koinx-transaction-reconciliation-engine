@@ -1,26 +1,48 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "nodenext",
-    "lib": ["ES2020"],
-    "outDir": "./dist",
+    "target": "ES2022",
+
+    "module": "commonjs",
+
+    "moduleResolution": "node",
+
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
+
+    "types": [
+      "node"
+    ],
+
     "rootDir": "./src",
-    "strict": true,
+
+    "outDir": "./dist",
+
+    "strict": false,
+
     "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "moduleResolution": "nodenext",
+
     "allowSyntheticDefaultImports": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
+
+    "resolveJsonModule": true,
+
+    "skipLibCheck": true,
+
+    "forceConsistentCasingInFileNames": true,
+
     "sourceMap": true,
-    "incremental": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
+
+    "incremental": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+
+  "include": [
+    "src/**/*"
+  ],
+
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts"
+  ]
 }
