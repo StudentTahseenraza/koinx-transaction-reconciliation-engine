@@ -6,13 +6,11 @@
 
     "moduleResolution": "node",
 
+    "types": ["node"],
+
     "lib": [
       "ES2022",
       "DOM"
-    ],
-
-    "types": [
-      "node"
     ],
 
     "rootDir": "./src",
